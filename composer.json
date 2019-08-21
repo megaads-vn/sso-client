@@ -1,0 +1,23 @@
+{
+    "name": "megaads/sso-client",
+    "description": "Sso client package for laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "MegaAds",
+            "email": "info@megaads.vn"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "classmap": [
+            "src"
+        ],
+        "psr-4": {
+            "Megaads\\SsoClient\\": "src/"
+        }
+    }
+}
