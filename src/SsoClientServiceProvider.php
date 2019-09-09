@@ -31,7 +31,6 @@ class SsoClientServiceProvider extends ServiceProvider
 
     private function publishConfig()
     {
-        
         $path = $this->getConfigPath();
         $this->publishes([$path => config_path('sso-client.php')], 'config');
     }

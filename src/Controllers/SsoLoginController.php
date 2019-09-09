@@ -13,6 +13,8 @@ class SsoLoginController {
     
     private $ssoService;
     private $configTables;
+    private $aclServices;
+    private $config;
 
     /**
      * Where to redirect users after login.
@@ -24,6 +26,7 @@ class SsoLoginController {
     public function __construct()
     {
         $this->ssoService = App::make('ssoService');
+        $this->config = \Config::get('sso-client');
         $this->configTables = \Config::get('sso-client.tables');
     }
 
@@ -39,8 +42,6 @@ class SsoLoginController {
     public function ssoCallback() {
         $request = Input::all();
         $userTable = $this->configTables['users'];
-        $isAutoCreateUser = \Config::get('sso-client.auto_create_user');
-        $authType = \Config::get('sso-client.auth_type');
         if ( array_key_exists('token', $request) ) {
             $token = $request['token'];
             Session::put('ssoToken', $token);
@@ -48,23 +49,17 @@ class SsoLoginController {
             $userInfo = $this->ssoService->getUser();
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)->where('email', $userInfo->email)->first();
+                $this->getRedirectTo();
                 if ( empty($existsUser) ) {
-                    if ( $isAutoCreateUser ) {
-                        return $this->createUser($userInfo);
+                    if ( $this->config['auto_create_user'] ) {
+                        $userId = $this->createUser($userInfo);
+                        $userInfo->id = $userId;
+                        $this->handleUserSignin($userInfo);
                     } else {
                         return Response::make('Invalid username', 403);
                     }
                 } else {
-                    if ( $authType == 'Auth') {
-                        if ( Auth::loginUsingId($existsUser->id)) {
-                            return redirect()->to($this->redirectTo);
-                        } else { 
-                            return Response::make('Unauthorized', 401);
-                        }
-                    } else {
-
-                    }
-                    
+                    $this->handleUserSignin($existsUser);
                 }
             } else {
                 return Response::make('Unauthorized', 403);
@@ -72,5 +67,60 @@ class SsoLoginController {
         } else {
             return Response::make('Unauthorized', 500);
         }
+    }
+
+    protected function handleUserSignin($user) {
+        $acl = (object) $this->config['aclService'];
+        $loggedIn = false;
+        $authType = $this->config['auth_type'];
+        if ( $authType == 'Auth' ) {
+            $loggedIn = Auth::loginUsingId($user->id);
+        }
+        if ( $authType == 'Session' ) {
+            Session::put("user", $user);
+            $loggedIn = true;
+        }
+        if ( $acl->load && $user->type && $user->type == 'staff' ) {
+            $aclFunction = $acl->function;
+            $this->aclServices = App::make($acl->name);
+            $this->aclServices->$aclFunction;
+        }
+        if ( $loggedIn ) {
+            Event::fire('auth.login');
+            return Redirect::to($this->redirectTo);
+        } else {
+            return Response::make('Unauthorize', 401);
+        }
+    }
+
+    protected function getRedirectTo() {
+        $this->redirectTo = $this->config['redirect_to'];
+        if ( Session::has('redirection') ) {
+            $this->redirectTo = Session::get('redirection');
+            Session::forget('redirection');
+        }
+
+        if ( Session::has('redirect_url') ) {
+            $this->redirectTo = Session::get('redirect_url');
+            Session::forget('redirect_url');
+        }
+
+    }
+
+    protected function createUser($ssoUser) {
+        $insertId = -1;
+        try {
+            $tableUser = $this->configTables['users'];
+            $insertId = DB::table($tableUser)->insertGetId(
+                array(
+                    'email' => $ssoUser->email,
+                    'name' => $ssoUser->name,
+                    'password' => ''
+                )
+            );
+        } catch (\Exception $ex) {
+            \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
+        }
+        return $insertId;
     }
 }
