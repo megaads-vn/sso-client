@@ -4,6 +4,7 @@ namespace Megaads\SsoClient\Controllers;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
@@ -31,7 +32,7 @@ class SsoLoginController {
     }
 
     public function showLoginForm() {
-        if ( ! config('sso.active') ) {
+        if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
             $loginRedirect = $this->ssoService->getRedirectUrl();
@@ -86,7 +87,7 @@ class SsoLoginController {
             $this->aclServices->$aclFunction;
         }
         if ( $loggedIn ) {
-            Event::fire('auth.login');
+            // Event::fire('auth.login');
             return Redirect::to($this->redirectTo);
         } else {
             return Response::make('Unauthorize', 401);
@@ -111,6 +112,7 @@ class SsoLoginController {
         $insertId = -1;
         try {
             $tableUser = $this->configTables['users'];
+            $this->buildInsertData($ssoUser);
             $insertId = DB::table($tableUser)->insertGetId(
                 array(
                     'email' => $ssoUser->email,
@@ -122,5 +124,15 @@ class SsoLoginController {
             \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
         }
         return $insertId;
+    }
+
+    private function buildInsertData(&$ssoUser) {
+        $postbackConfig = $this->config['post_back'];
+        foreach ( $ssoUser as $field => $val ) {
+            if ( array_key_exists($field, $postbackConfig['map'])) {
+                $getColum = $postbackConfig['map'][$field];
+                $ssoUser->$getColum = $ssoUser->$field;
+            }
+        }
     }
 }

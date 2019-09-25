@@ -18,9 +18,9 @@ class SsoPostbackController extends BaseController
         $retval = [
             'status' => 'fail'
         ];
-        $configUserTable = \Config::get('sso-postback.user_table');
-        $configTableColumn = \Config::get('sso-postback.user_account_column');
-        if ( !\Config::get('sso-postback.debug') ) {
+        $configUserTable = $this->config['user_table'];
+        $configTableColumn = $this->config['user_account_column'];
+        if ( ! $this->config['debug'] ) {
             $checkDns = $this->checkDnsCallService();
             if ( !$checkDns ) {
                 $retval['message'] = 'Invalid domain! Please check again.';
@@ -63,7 +63,7 @@ class SsoPostbackController extends BaseController
                     $retval['msg'] = "Account created successfully with email $email";
                 }
             } else {
-                $status = $active ? \Config::get('sso-postback.active_status') : \Config::get('sso-postback.inactive_status');
+                $status = $active ? $this->config['active_status'] : $this->config['inactive_status'];
                 DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")->update(['status' => $status]);
                 $retval['status'] = 'successful';
                 $retval['msg'] = "Update user's status to $status";
@@ -75,7 +75,7 @@ class SsoPostbackController extends BaseController
 
     private function buildInsertData($tableColumns) {
         unset($tableColumns[0]);
-        $mapColumn = \Config::get('sso-postback.map');
+        $mapColumn = $this->config['map'];
         $buildData = [];
         foreach($tableColumns as $column) {
             $params = [];

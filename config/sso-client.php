@@ -2,11 +2,11 @@
 return [
     'active' => true,
     'server' => [
-        'base_url' => 'https://shopbay.vn',
-        'login_path' => '/login',
-        'auth_path' => '/api/auth',
+        'base_url' => 'https://id.megaads.vn', 
+        'login_path' => '/system/home/login', 
+        'auth_path' => '/sso/auth', 
     ],
-    'redirect_to' => '/admin', // Default redirect after login.
+    'redirect_to' => '/', // Default redirect after login.
     'login_name' => '', // name for login route.default is 'login'
     'login_url' => '',
     'callback_url' => '/sso/callback',
@@ -15,17 +15,16 @@ return [
         'name' => 'ACLService', // acl service singleton
         'function' => 'loadPermissions()'
     ],
-    'auto_create_user' => false,
+    'auto_create_user' => true,
     'auth_type' => 'Auth', //Auth or Session
     'auth_params' => [
         'token' => '',
-        'shop_uuid' => env('SHOP_UUID', -1)
     ],
     'tables' => [
-        'users' => 'sb_users'
+        'users' => 'users'
     ],
     'post_back' => [
-        'debug' => 'false', // If debug == true. Ignore check DNS
+        'debug' => 'true', // If debug == true. Ignore check DNS
         'user_table' => 'users',
         'user_account_column' => 'email',
         'active_status' => 'active',
