@@ -1,6 +1,10 @@
 <?php 
 namespace Megaads\SsoClient\Controllers;
 
+use Illuminate\Foundation\Auth\RedirectsUsers;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -9,9 +13,11 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
-class SsoLoginController {
-    
+class SsoLoginController extends BaseController {
+    use ThrottlesLogins, RedirectsUsers;
+
     private $ssoService;
     private $configTables;
     private $aclServices;
@@ -31,12 +37,22 @@ class SsoLoginController {
         $this->configTables = \Config::get('sso-client.tables');
     }
 
-    public function showLoginForm() {
+
+    public function showLoginForm(Request $request) {
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
             $loginRedirect = $this->ssoService->getRedirectUrl();
             return Redirect::to($loginRedirect);
+        }
+    }
+
+    public function ssoLogout (){
+        Auth::logout();
+        if ( $this->config['active']) {
+            Session::forget('ssoToken');
+            $loginRedirect = $this->ssoService->getLogoutUrl();
+            return Redirect::to( $loginRedirect );
         }
     }
 
@@ -55,12 +71,12 @@ class SsoLoginController {
                     if ( $this->config['auto_create_user'] ) {
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
-                        $this->handleUserSignin($userInfo);
+                        return $this->handleUserSignin($userInfo);
                     } else {
                         return Response::make('Invalid username', 403);
                     }
                 } else {
-                    $this->handleUserSignin($existsUser);
+                    return $this->handleUserSignin($existsUser);
                 }
             } else {
                 return Response::make('Unauthorized', 403);

@@ -2,14 +2,18 @@
 return [
     'active' => true,
     'server' => [
-        'base_url' => 'https://id.megaads.vn', 
-        'login_path' => '/system/home/login', 
-        'auth_path' => '/sso/auth', 
+        'base_url' => 'http://id.megaads.net',
+        'login_path' => '/system/home/login',
+        'auth_path' => '/sso/auth',
+        'logout_path' => '/system/home/logout'
     ],
-    'redirect_to' => '/', // Default redirect after login.
+    'redirect_to' => '/home', // Default redirect after login.
     'login_name' => '', // name for login route.default is 'login'
     'login_url' => '',
+    'logout_url' => 'sso-logout',
+    'logout_name' => 'logout',
     'callback_url' => '/sso/callback',
+    'logout_callback_url' => '/',
     'aclService' => [
         'load' => false,
         'name' => 'ACLService', // acl service singleton

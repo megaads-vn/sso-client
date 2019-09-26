@@ -19,7 +19,8 @@ class CustomAuthenticate
     public function handle($request, Closure $next)
     {
         $ssoService = new SsoService();
-        if (Auth::check()) {
+        $authCheck = Auth::check();
+        if ($authCheck) {
             if (\Config::get('sso-client.active')) {
                 $ssoService->setToken();
                 $userInfo = $ssoService->getUser();

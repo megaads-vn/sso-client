@@ -34,6 +34,23 @@ class SsoService
         return $redirectUrl;
     }
 
+    public function getLogoutUrl() {
+        $httpHost = "http://{$_SERVER['HTTP_HOST']}";
+        $serverConfig = \Config::get('sso-client.server');
+        $callbackUrl  = $httpHost . \Config::get('sso-client.logout_callback_url');
+        $encodedCallbackUrl = urlencode($callbackUrl);
+        $ssoServer = $serverConfig['base_url'];
+        $logoutPath = $serverConfig['logout_path'];
+        $redirectUrl  = $ssoServer;
+        $redirectUrl .= $logoutPath; 
+        $redirectUrl .= "?continue=$encodedCallbackUrl";
+        $urlParams = $this->buildUrlParams();
+        if ( $urlParams !== '' ) {
+            $redirectUrl .= '&' . $urlParams;
+        }
+        return $redirectUrl;
+    }
+
     public function getUser () {
         $retval = false;
         $serverConfig = \Config::get('sso-client.server');
