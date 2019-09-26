@@ -1,4 +1,4 @@
-# MEGAADS SSO CLIENT PACKAGE
+# MEGAADS SSO CLIENT PACKAGE 
 - Install
     ```
     composer require megaads/sso-client
@@ -11,6 +11,7 @@
     ```
     php artisan vendor:publish --provider="Megaads\SsoClient\SsoClientServiceProvider"
     ```
+After file publish open and edit file config
 - Registry custom authentication middleware in `Kernel.php` file
     ```
     'sso' => \Megaads\SsoClient\Middleware\CustomAuthenticate::class,
@@ -23,7 +24,7 @@
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         
-        //Add bellow lines
+        //Add bellow lines👇🏻
         \App\Http\Middleware\EncryptCookies::class,
         \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
         \Illuminate\Session\Middleware\StartSession::class,
