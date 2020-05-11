@@ -1,22 +1,22 @@
 <?php
-$isActive = Config::get('sso-client.active');
+$isActive = Config::get('sso.active');
 if ($isActive) {
     $loginRoute = '/login';
     $loginRouteName = 'login';
     $logoutRoute = '/logout';
     $logoutRouteName = 'logout';
-    if (Config::get('sso-client.login_url') != '') {
-        $loginRoute = Config::get('sso-client.login_url');
+    if (Config::get('sso.login_url') != '') {
+        $loginRoute = Config::get('sso.login_url');
     }
-    if (Config::get('sso-client.login_name') != '') {
-        $loginRouteName = Config::get('sso-client.login_name');
+    if (Config::get('sso.login_name') != '') {
+        $loginRouteName = Config::get('sso.login_name');
     }
 
-    if ( Config::get('sso-client.logout_url') != '' ) {
-        $logoutRoute = Config::get('sso-client.logout_url');
+    if ( Config::get('sso.logout_url') != '' ) {
+        $logoutRoute = Config::get('sso.logout_url');
     }
-    if (Config::get('sso-client.logout_name') != '') {
-        $logoutRouteName = Config::get('sso-client.logout_name');
+    if (Config::get('sso.logout_name') != '') {
+        $logoutRouteName = Config::get('sso.logout_name');
     }
     Route::get($loginRoute, [
         'as' => $loginRouteName,

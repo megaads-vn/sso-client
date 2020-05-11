@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Megaads\Sso\SsoController;
 
 class SsoLoginController extends BaseController {
     use ThrottlesLogins, RedirectsUsers;
@@ -33,8 +34,8 @@ class SsoLoginController extends BaseController {
     public function __construct()
     {
         $this->ssoService = App::make('ssoService');
-        $this->config = \Config::get('sso-client');
-        $this->configTables = \Config::get('sso-client.tables');
+        $this->config = \Config::get('sso');
+        $this->configTables = \Config::get('sso.tables');
     }
 
 
@@ -42,7 +43,8 @@ class SsoLoginController extends BaseController {
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
-            $loginRedirect = $this->ssoService->getRedirectUrl();
+            $httpHost = "http://{$_SERVER['HTTP_HOST']}";
+            $loginRedirect = SsoController::getRedirectUrl($httpHost);
             return Redirect::to($loginRedirect);
         }
     }
@@ -61,9 +63,7 @@ class SsoLoginController extends BaseController {
         $userTable = $this->configTables['users'];
         if ( array_key_exists('token', $request) ) {
             $token = $request['token'];
-            Session::put('ssoToken', $token);
-            $this->ssoService->setToken();
-            $userInfo = $this->ssoService->getUser();
+            $userInfo = SsoController::getUser($token);
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)->where('email', $userInfo->email)->first();
                 $this->getRedirectTo();

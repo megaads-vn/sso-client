@@ -9,7 +9,7 @@
     ```
 - Publish package config file
     ```
-    php artisan vendor:publish --provider="Megaads\SsoClient\SsoClientServiceProvider"
+    php artisan vendor:publish --provider="Megaads\SsoClient\SsoClientServiceProvider" --tag=config --force
     ```
 After file publish open and edit file config
 - Registry custom authentication middleware in `Kernel.php` file

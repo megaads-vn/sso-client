@@ -1,12 +1,13 @@
 <?php
 return [
     'active' => true,
-    'server' => [
-        'base_url' => 'http://id.megaads.net',
-        'login_path' => '/system/home/login',
-        'auth_path' => '/sso/auth',
-        'logout_path' => '/system/home/logout'
-    ],
+    'server' => "https://id.megaads.vn",
+    'callback_url' => url('/sso/callback'),
+    'logout_callback_url' => url("/"),
+    'app_id' => 2,
+    'login_path' => '/system/home/login',
+    'auth_path' => '/sso/auth',
+    'logout_path' => '/system/home/logout',
     'redirect_to' => '/home', // Default redirect after login.
     'login_name' => '', // name for login route.default is 'login'
     'login_url' => '',
