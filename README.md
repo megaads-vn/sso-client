@@ -7,6 +7,11 @@
     ```
     Megaads\SsoClient\SsoClientServiceProvider::class
     ```
+- Make laravel auth.
+    ```
+        php artisan make:auth
+        php artisan migrate
+    ```
 - Publish package config file
     ```
     php artisan vendor:publish --provider="Megaads\SsoClient\SsoClientServiceProvider" --tag=config --force
