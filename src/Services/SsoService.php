@@ -8,42 +8,25 @@ class SsoService
 {   
     protected $token = "";
 
-    public function setToken() {
-        if ( Session::has('ssoToken') ) {
-            $token = Session::get('ssoToken');
-            $this->token = $token;
-        }
-    }
-    public function getRedirectUrl () {
-        $httpHost = "http://{$_SERVER['HTTP_HOST']}";
-        $serverConfig = \Config::get('sso-client.server');
-        $callbackUrl  = $httpHost . '/sso/callback';
-        if ( \Config::get('sso-client.callback_url') != '') {
-            $callbackUrl = $httpHost . '' . \Config::get('sso-client.callback_url');
-        }
-        $encodedCallbackUrl = urlencode($callbackUrl);
-        $ssoServer = $serverConfig['base_url'];
-        $loginPath = $serverConfig['login_path'];
-        $redirectUrl  = $ssoServer;
-        $redirectUrl .= $loginPath; 
-        $redirectUrl .= "?continue=$encodedCallbackUrl";
-        $urlParams = $this->buildUrlParams();
-        if ( $urlParams !== '' ) {
-            $redirectUrl .= '&' . $urlParams;
-        }
-        return $redirectUrl;
+    public function setToken($token) {
+        Session::put('ssoToken', $token);
     }
 
+    public function getToken() {
+        $token = NULL;
+        if (Session::has('ssoToken')) {
+            $token = Session::get('ssoToken');
+        }
+        return $token;
+    }
+    
     public function getLogoutUrl() {
         $httpHost = "http://{$_SERVER['HTTP_HOST']}";
-        $serverConfig = \Config::get('sso-client.server');
-        $callbackUrl  = $httpHost . \Config::get('sso-client.logout_callback_url');
+        $serverUrl = \Config::get('sso.server');
+        $serverLogoutPath = \Config::get('sso.logout_path');
+        $callbackUrl  = $httpHost . \Config::get('sso.logout_callback_url');
         $encodedCallbackUrl = urlencode($callbackUrl);
-        $ssoServer = $serverConfig['base_url'];
-        $logoutPath = $serverConfig['logout_path'];
-        $redirectUrl  = $ssoServer;
-        $redirectUrl .= $logoutPath; 
-        $redirectUrl .= "?continue=$encodedCallbackUrl";
+        $redirectUrl = "$serverUrl$serverLogoutPath?continue=$encodedCallbackUrl";
         $urlParams = $this->buildUrlParams();
         if ( $urlParams !== '' ) {
             $redirectUrl .= '&' . $urlParams;
@@ -107,12 +90,13 @@ class SsoService
     }
 
     protected function buildUrlParams() {
+        $token = $this->getToken();
         $configAuthParams = \Config::get('sso-client.auth_params');
         $urlParams = '';
         if ( count($configAuthParams) > 0 ) {
             foreach ( $configAuthParams as $key => $val ) {
-               if ( $key == 'token' && $this->token !== '') {
-                    $val = $this->token ;
+               if ( $key == 'token' && $token !== '') {
+                    $val = $token ;
                }
                if ( $val != '' ) {
                     $urlParams .= $key . '=' . $val . '&';

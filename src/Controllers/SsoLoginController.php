@@ -53,8 +53,8 @@ class SsoLoginController extends BaseController {
         Auth::logout();
         if ( $this->config['active']) {
             Session::forget('ssoToken');
-            $loginRedirect = $this->ssoService->getLogoutUrl();
-            return Redirect::to( $loginRedirect );
+            $logoutRedirect = $this->ssoService->getLogoutUrl();
+            return Redirect::to( $logoutRedirect );
         }
     }
 
@@ -63,6 +63,7 @@ class SsoLoginController extends BaseController {
         $userTable = $this->configTables['users'];
         if ( array_key_exists('token', $request) ) {
             $token = $request['token'];
+            $this->ssoService->setToken($token);
             $userInfo = SsoController::getUser($token);
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)->where('email', $userInfo->email)->first();

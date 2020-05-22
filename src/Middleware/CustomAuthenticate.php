@@ -5,6 +5,7 @@ namespace Megaads\SsoClient\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Support\Facades\Redirect;
+use Megaads\Sso\SsoController;
 use Megaads\SsoClient\Services\SsoService;
 
 class CustomAuthenticate
@@ -21,9 +22,9 @@ class CustomAuthenticate
         $ssoService = new SsoService();
         $authCheck = Auth::check();
         if ($authCheck) {
-            if (\Config::get('sso-client.active')) {
-                $ssoService->setToken();
-                $userInfo = $ssoService->getUser();
+            if (\Config::get('sso.active')) {
+                $token = $ssoService->getToken();
+                $userInfo = SsoController::getUser($token);
                 if (
                     $userInfo &&
                     $userInfo->email &&

@@ -11,7 +11,7 @@ class SsoPostbackController extends BaseController
     private $config;
     public function __construct()
     {
-        $this->config = \Config::get('sso-client.post_back');
+        $this->config = \Config::get('sso.post_back');
     }
 
     public function ssoPostback() {
