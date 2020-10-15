@@ -40,6 +40,7 @@ class SsoLoginController extends BaseController {
 
 
     public function showLoginForm(Request $request) {
+        Session::put('redirection', $previousUrl);
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
