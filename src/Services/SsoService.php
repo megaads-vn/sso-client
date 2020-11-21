@@ -36,7 +36,7 @@ class SsoService
 
     public function getUser () {
         $retval = false;
-        $serverConfig = \Config::get('sso-client.server');
+        $serverConfig = \Config::get('sso.server');
         $getUserUrl  = $serverConfig['base_url'];
         $authPath = $serverConfig['auth_path'];
         $getUserUrl .= $authPath;
@@ -91,7 +91,7 @@ class SsoService
 
     protected function buildUrlParams() {
         $token = $this->getToken();
-        $configAuthParams = \Config::get('sso-client.auth_params');
+        $configAuthParams = \Config::get('sso.auth_params');
         $urlParams = '';
         if ( count($configAuthParams) > 0 ) {
             foreach ( $configAuthParams as $key => $val ) {

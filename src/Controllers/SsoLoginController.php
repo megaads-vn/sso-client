@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
 use Megaads\Sso\SsoController;
 
 class SsoLoginController extends BaseController {
@@ -40,6 +41,8 @@ class SsoLoginController extends BaseController {
 
 
     public function showLoginForm(Request $request) {
+        $previousUrl = URL::previous();
+        Session::put('redirection', $previousUrl);
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
