@@ -92,7 +92,7 @@ class SsoLoginController extends BaseController {
         $loggedIn = false;
         $authType = $this->config['auth_type'];
         if ( $authType == 'Auth' ) {
-            $loggedIn = Auth::loginUsingId($user->id);
+            $loggedIn = Auth::loginUsingId($user->id, true);
         }
         if ( $authType == 'Session' ) {
             Session::put("user", $user);
