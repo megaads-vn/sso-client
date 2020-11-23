@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Support\Facades\Redirect;
 use Megaads\Sso\SsoController;
 use Megaads\SsoClient\Services\SsoService;
+use Illuminate\Support\Facades\Session;
 
 class CustomAuthenticate
 {
