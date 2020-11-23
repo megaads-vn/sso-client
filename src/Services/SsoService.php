@@ -9,13 +9,13 @@ class SsoService
     protected $token = "";
 
     public function setToken($token) {
-        Session::put('ssoToken', $token);
+        Session::put('token', $token);
     }
 
     public function getToken() {
         $token = NULL;
-        if (Session::has('ssoToken')) {
-            $token = Session::get('ssoToken');
+        if (Session::has('token')) {
+            $token = Session::get('token');
         }
         return $token;
     }

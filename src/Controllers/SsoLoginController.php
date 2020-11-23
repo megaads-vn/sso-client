@@ -55,7 +55,8 @@ class SsoLoginController extends BaseController {
     public function ssoLogout (){
         Auth::logout();
         if ( $this->config['active']) {
-            Session::forget('ssoToken');
+            Session::forget('token');
+            Session::forget('user');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect );
         }
@@ -96,6 +97,7 @@ class SsoLoginController extends BaseController {
         $authType = $this->config['auth_type'];
         if ( $authType == 'Auth' ) {
             $loggedIn = Auth::loginUsingId($user->id, true);
+            Session::put('user', $user);
         }
         if ( $authType == 'Session' ) {
             Session::put("user", $user);

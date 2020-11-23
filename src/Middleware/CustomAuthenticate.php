@@ -20,18 +20,10 @@ class CustomAuthenticate
     public function handle($request, Closure $next)
     {
         $ssoService = new SsoService();
-        $authCheck = Auth::check();
-        if ($authCheck) {
+        if (Session::has("user")) {
             if (\Config::get('sso.active')) {
-                $token = $ssoService->getToken();
-                $userInfo = SsoController::getUser($token);
-                if (
-                    $userInfo &&
-                    $userInfo->email &&
-                    Auth::user() &&
-                    Auth::user()->email  &&
-                    str_replace(".", "", $userInfo->email) == str_replace(".", "", Auth::user()->email)
-                ) {
+                $ssoValidationUser = SsoController::ssoTokenValidation();
+                if ($ssoValidationUser) {
                     return $next($request);
                 }
                 Auth::logout();
