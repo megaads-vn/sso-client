@@ -150,6 +150,7 @@ class SsoLoginController extends BaseController {
                     'status' => $ssoUser->status
                 )
             );
+            
         } catch (\Exception $ex) {
             \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
             throw new Exception("Error when create user " . $ex->getMessage());
