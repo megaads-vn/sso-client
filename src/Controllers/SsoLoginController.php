@@ -1,6 +1,7 @@
 <?php 
 namespace Megaads\SsoClient\Controllers;
 
+use Exception;
 use Illuminate\Foundation\Auth\RedirectsUsers;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
@@ -67,18 +68,24 @@ class SsoLoginController extends BaseController {
         $userTable = $this->configTables['users'];
         if ( array_key_exists('token', $request) ) {
             $token = $request['token'];
+            $activeStatus = isset($this->config['post_back']) && isset($this->config['post_back']['active_status']) ? $this->config['post_back']['active_status'] : 'active';
+            $invalidUserMsg = isset($this->config['messages']) && isset($this->config['messages']['invalid_user']) ? $this->config['messages']['invalid_user'] : 'Invalid user';
             $this->ssoService->setToken($token);
             $userInfo = SsoController::getUser($token);
             if ( $userInfo ) {
-                $existsUser = DB::table($userTable)->where('email', $userInfo->email)->first();
+                $existsUser = DB::table($userTable)
+                                ->where('email', $userInfo->email)
+                                ->where('status', $activeStatus)
+                                ->first();
                 $this->getRedirectTo();
                 if ( empty($existsUser) ) {
                     if ( $this->config['auto_create_user'] ) {
+                        $userInfo->status = $activeStatus;
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
                         return $this->handleUserSignin($userInfo);
                     } else {
-                        return Response::make('Invalid username', 403);
+                        return Response::make($invalidUserMsg, 403);
                     }
                 } else {
                     return $this->handleUserSignin($existsUser);
@@ -139,11 +146,13 @@ class SsoLoginController extends BaseController {
                 array(
                     'email' => $ssoUser->email,
                     'name' => $ssoUser->name,
-                    'password' => ''
+                    'password' => '',
+                    'status' => $ssoUser->status
                 )
             );
         } catch (\Exception $ex) {
             \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
+            throw new Exception("Error when create user " . $ex->getMessage());
         }
         return $insertId;
     }

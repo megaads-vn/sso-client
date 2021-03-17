@@ -37,3 +37,4 @@ After file publish open and edit file config
         \App\Http\Middleware\VerifyCsrfToken::class
     ];
     ```
+
