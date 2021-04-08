@@ -147,7 +147,8 @@ class SsoLoginController extends BaseController {
                     'email' => $ssoUser->email,
                     'name' => $ssoUser->name,
                     'password' => '',
-                    'status' => $ssoUser->status
+                    'status' => $ssoUser->status,
+                    'code' => $ssoUser->code
                 )
             );
             
