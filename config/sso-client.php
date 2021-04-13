@@ -117,13 +117,10 @@ return [
         'user_table' => 'users',
         'user_account_column' => 'email',
         'active_status' => 'active',
-        'inactive_status' => 'deactive',
+        'deactive_status' => 'deactive',
         'map' => [
             'full_name' => 'name',
             'active' => 'status',
         ]
-    ],
-    'messages' => [
-        'invalid_user' => 'User does not exists or not has permission for this system. Please contact to admin for more information.',
     ]
 ];
