@@ -122,5 +122,8 @@ return [
             'full_name' => 'name',
             'active' => 'status',
         ]
+    ],
+    'messages' => [
+        'invalid_user' => ''
     ]
 ];

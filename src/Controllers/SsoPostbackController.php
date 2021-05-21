@@ -84,6 +84,12 @@ class SsoPostbackController extends BaseController
                 $getColum = array_search($column, $mapColumn);
             }
             $params[$column] = Input::get($getColum, '');
+            if (isset($params['created_at'])) {
+                $params['created_at'] = date('Y-m-d H:i:s');
+            }
+            if (isset($params['updated_at'])) {
+                $params['updated_at'] = date('Y-m-d H:i:s');
+            }
             $buildData = $buildData + $params;
         }
         return $buildData;
