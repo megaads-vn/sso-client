@@ -117,10 +117,16 @@ return [
         'user_table' => 'users',
         'user_account_column' => 'email',
         'active_status' => 'active',
-        'deactive_status' => 'deactive',
+        'inactive_status' => 'deactive',
         'map' => [
             'full_name' => 'name',
             'active' => 'status',
+        ],
+        'default_fields' => [
+            'columns' => 'value'
+        ],
+        'ignore_fields' => [
+            'columns'
         ]
     ],
     'messages' => [

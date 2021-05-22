@@ -76,6 +76,8 @@ class SsoPostbackController extends BaseController
     private function buildInsertData($tableColumns) {
         unset($tableColumns[0]);
         $mapColumn = $this->config['map'];
+        $defaultColumns = $this->config['default_fields'];
+        $ignoreColumns = $this->config['ignore_fields'];
         $buildData = [];
         foreach($tableColumns as $column) {
             $params = [];
@@ -91,6 +93,20 @@ class SsoPostbackController extends BaseController
                 $params['updated_at'] = date('Y-m-d H:i:s');
             }
             $buildData = $buildData + $params;
+        }
+        if (count($defaultColumns) > 0) {
+            foreach ($defaultColumns as $col => $val) {
+                if (isset($buildData[$col])) {
+                    $buildData[$col] = $val;
+                }
+            }
+        }
+        if (count($ignoreColumns) > 0) {
+            foreach ($ignoreColumns as $col) {
+                if (isset($buildData[$col])) {
+                    unset($buildData[$col]);
+                }
+            }
         }
         return $buildData;
     }
