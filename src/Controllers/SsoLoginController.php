@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\URL;
@@ -49,6 +50,7 @@ class SsoLoginController extends BaseController {
         } else {
             $httpHost = "http://{$_SERVER['HTTP_HOST']}";
             $loginRedirect = SsoController::getRedirectUrl($httpHost);
+            $loginRedirect = $this->prepareRedirectWithLocale($loginRedirect);
             return Redirect::to($loginRedirect);
         }
     }
@@ -125,11 +127,16 @@ class SsoLoginController extends BaseController {
 
     protected function getRedirectTo() {
         $this->redirectTo = $this->config['redirect_to'];
+        $locale = $this->getLocale();
+        if ($locale !== '') {
+            $this->redirectTo = '/' . $locale . $this->redirectTo;
+        }
+        
         if ( Session::has('redirection') ) {
             $this->redirectTo = Session::get('redirection');
             Session::forget('redirection');
         }
-
+        
         if ( Session::has('redirect_url') ) {
             $this->redirectTo = Session::get('redirect_url');
             Session::forget('redirect_url');
@@ -167,5 +174,46 @@ class SsoLoginController extends BaseController {
                 $ssoUser->$getColum = $ssoUser->$field;
             }
         }
+    }
+
+    private function showSelectCountry() {
+        return view('select-contry');
+    }
+
+    private function getLocale() {
+        $uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
+        preg_match('/\/([A-Za-z]+)(\/*\-*)/', $uri, $locale);
+
+        if (isset($locale[0])) {
+            $locale[0] = str_replace('/-', '', $locale[0]);
+            if (strpos($locale[0], '-') === false) {
+                if (count($locale) == 3) {
+                    $locale = $locale[1];
+                } else {
+                    $locale = '';
+                }   
+            } else {
+                $locale = '';
+            }
+        } else {
+            $locale = '';
+        }
+        return $locale;
+    }
+
+    private function prepareRedirectWithLocale($loginRedirect) {
+        $parts = parse_url($loginRedirect);
+        parse_str($parts['query'], $query);
+        $locale = $this->getLocale();
+        if ($locale !== '') {
+            $query['continue'] = str_replace('/sso/callback', "/$locale/sso/callback", $query['continue']);
+        }
+        $queryStr = '';
+        foreach ($query as $attr => $value) {
+            $queryStr .= $attr . '=' . urlencode($value) . '&';
+        }
+        $queryStr = rtrim($queryStr, '&');
+        $loginRedirect = $parts['scheme'] . '://' . $parts['host'] . $parts['path'] . '?' . $queryStr;
+        return $loginRedirect;
     }
 }

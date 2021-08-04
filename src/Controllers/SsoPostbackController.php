@@ -27,7 +27,7 @@ class SsoPostbackController extends BaseController
                 return \Response::json($retval);
             }
         }
-
+        
         if ( !Schema::hasTable($configUserTable) ) {
             $retval['message'] = 'Invalid table name. Please check configuration file.';
             return \Response::json($retval);
@@ -47,7 +47,8 @@ class SsoPostbackController extends BaseController
                     $retval['status'] = 'successful';
                     $retval['msg'] = "Email doesn't exist.";
                 } else {
-                    $insertParams = $this->buildInsertData($tableColumns);
+                    $requestInput = Input::all();
+                    $insertParams = $this->buildInsertData($tableColumns, $requestInput);
                     if ( $configTableColumn == 'email' ) {
                         DB::table($configUserTable)->insert($insertParams);
                     } else {
@@ -73,7 +74,7 @@ class SsoPostbackController extends BaseController
         return \Response::json($retval);
     }
 
-    private function buildInsertData($tableColumns) {
+    private function buildInsertData($tableColumns, $requestData = []) {
         unset($tableColumns[0]);
         $mapColumn = $this->config['map'];
         $defaultColumns = $this->config['default_fields'];
@@ -91,6 +92,9 @@ class SsoPostbackController extends BaseController
             }
             if (isset($params['updated_at'])) {
                 $params['updated_at'] = date('Y-m-d H:i:s');
+            }
+            if (count($requestData) > 0 && isset($requestData[$column])) {
+                $params[$column] = $requestData[$column];
             }
             $buildData = $buildData + $params;
         }

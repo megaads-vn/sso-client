@@ -11,15 +11,16 @@ class SsoClientServiceProvider extends ServiceProvider
     public function boot() 
     {
         $framework = $this->checkFrameWork();
-        if ($framework && $framework['key'] == 'laravel/framework' && $framework['version'] > 52 ) {
-            include __DIR__ . '/routes.php';
-        } else {  
-            if ( method_exists($this, 'routesAreCached') ) {
-                if (!$this->app->routesAreCached()) {
-                    include __DIR__ . '/routes.php';
-                }
-            }
-        }
+        // if ($framework && $framework['key'] == 'laravel/framework' && $framework['version'] > 52 ) {
+        //     include __DIR__ . '/routes.php';
+        // } else {  
+        //     // if ( method_exists($this, 'routesAreCached') ) {
+        //     //     if (!$this->app->routesAreCached()) {
+        //     //         include __DIR__ . '/routes.php';
+        //     //     }
+        //     // }
+        // }
+        $this->app->register('Megaads\SsoClient\Providers\RouteServiceProvider');
         $this->publishConfig();
     }
 
