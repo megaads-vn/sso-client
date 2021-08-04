@@ -198,6 +198,13 @@ class SsoLoginController extends BaseController {
         } else {
             $locale = '';
         }
+        $envFile = '.env';
+        if ($locale !== '') {
+            $envFile = '.' . $locale . '.env';
+            if (!file_exists(__DIR__ . '/../../../../../' . $envFile)) {
+                $locale = '';
+            }
+        }
         return $locale;
     }
 
