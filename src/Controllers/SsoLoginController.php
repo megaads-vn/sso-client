@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Input;
@@ -60,6 +61,7 @@ class SsoLoginController extends BaseController {
         if ( $this->config['active']) {
             Session::forget('token');
             Session::forget('user');
+            Cache::forget('lastUserLogin');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect );
         }
@@ -118,7 +120,8 @@ class SsoLoginController extends BaseController {
             $this->aclServices->$aclFunction;
         }
         if ( $loggedIn ) {
-            // Event::fire('auth.login');
+            // Event::fire('sso.auth.login');
+            Cache::forever('lastUserLogin', Auth::user());
             return Redirect::to($this->redirectTo);
         } else {
             return Response::make('Unauthorize', 401);
