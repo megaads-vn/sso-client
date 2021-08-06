@@ -87,11 +87,13 @@ class SsoLoginController extends BaseController {
                         $userInfo->status = $activeStatus;
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
+                        $this->saveUserToken($userId, $token);
                         return $this->handleUserSignin($userInfo);
                     } else {
                         return Response::make($invalidUserMsg, 403);
                     }
                 } else {
+                    $this->saveUserToken($existsUser->id, $token);
                     return $this->handleUserSignin($existsUser);
                 }
             } else {
@@ -225,5 +227,16 @@ class SsoLoginController extends BaseController {
         $queryStr = rtrim($queryStr, '&');
         $loginRedirect = $parts['scheme'] . '://' . $parts['host'] . $parts['path'] . '?' . $queryStr;
         return $loginRedirect;
+    }
+
+    private function saveUserToken($userId, $token) {
+        $userTable = $this->configTables['users'];
+        $user = DB::table($userTable)->where('id', $userId)
+                                ->first();
+        if (isset($user->token)) {
+            DB::table($userTable)->where('id', $userId)->update([
+                'token' => $token
+            ]);
+        }
     }
 }
