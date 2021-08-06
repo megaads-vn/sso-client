@@ -23,7 +23,7 @@ if ($isActive) {
         'uses' => '\Megaads\SsoClient\Controllers\SsoLoginController@showLoginForm'
     ]);
 
-    Route::post($logoutRoute, [
+    Route::any($logoutRoute, [
         'as' => $logoutRouteName,
         'uses' => '\Megaads\SsoClient\Controllers\SsoLoginController@ssoLogout'
     ])->middleware(['sso']);
