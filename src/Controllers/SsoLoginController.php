@@ -62,8 +62,9 @@ class SsoLoginController extends BaseController {
             Session::forget('token');
             Session::forget('user');
             Session::forget('lastUserLogin');
+            $cookie = \Cookie::forget('user_id');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
-            return Redirect::to( $logoutRedirect );
+            return Redirect::to( $logoutRedirect )->withCookie($cookie);
         }
     }
 
@@ -124,6 +125,7 @@ class SsoLoginController extends BaseController {
         if ( $loggedIn ) {
             // Event::fire('sso.auth.login');
             Session::put('lastUserLogin', Auth::user());
+            \Cookie::queue('user_id', $user->id, 999999999);
             return Redirect::to($this->redirectTo);
         } else {
             return Response::make('Unauthorize', 401);
