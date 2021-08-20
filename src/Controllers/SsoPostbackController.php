@@ -49,16 +49,20 @@ class SsoPostbackController extends BaseController
                 } else {
                     $requestInput = Input::all();
                     $insertParams = $this->buildInsertData($tableColumns, $requestInput);
+                    $userId = -1;
                     if ( $configTableColumn == 'email' ) {
-                        DB::table($configUserTable)->insert($insertParams);
+                        $userId = DB::table($configUserTable)->insertGetId($insertParams);
                     } else {
                         $checkUser = DB::table($configUserTable)->where("username", $username)->first();
                         if ($checkUser) {
                             $insertParams['username'] = $username . mt_rand(100,999);
-                            DB::table($configUserTable)->insert($insertParams);
+                            $userId = DB::table($configUserTable)->insertGetId($insertParams);
                         } else {
-                            DB::table($configUserTable)->insert($insertParams);
+                            $userId = DB::table($configUserTable)->insertGetId($insertParams);
                         }
+                    }
+                    if ($userId > 0) {
+                        $this->saveUserToken($userId, $configUserTable);
                     }
                     $retval['status'] = 'successful';
                     $retval['msg'] = "Account created successfully with email $email";
@@ -169,5 +173,16 @@ class SsoPostbackController extends BaseController
 
         $text = preg_replace(array($regExpression, "`[-]+`",), "-", $text);
         return trim($text, "-");
+    }
+
+    private function saveUserToken($userId, $userTable) {
+        $token = md5($userId . time());
+        $user = DB::table($userTable)->where('id', $userId)
+                                ->first();
+        if (isset($user->token)) {
+            DB::table($userTable)->where('id', $userId)->update([
+                'token' => $token
+            ]);
+        }
     }
 }
