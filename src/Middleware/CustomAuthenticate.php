@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Redirect;
 use Megaads\Sso\Controllers\SsoController;
 use Megaads\SsoClient\Services\SsoService;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cookie;
 
 class CustomAuthenticate
 {
