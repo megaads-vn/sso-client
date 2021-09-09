@@ -23,7 +23,7 @@ class CustomAuthenticate
         $ssoService = new SsoService();
         if (Session::has("user")) {
             if (\Config::get('sso.active')) {
-                $ssoValidationUser = SsoController::ssoTokenValidation();
+                $ssoValidationUser = SsoController::ssoTokenValidation(false);
                 if ($ssoValidationUser) {
                     return $next($request);
                 }
@@ -32,6 +32,10 @@ class CustomAuthenticate
                 return $next($request);
             }
         }
-        return Redirect::to('login');
+        Session::forget('token');
+        Session::forget('user');
+        Session::forget('lastUserLogin');
+        $cookie = Cookie::forget('user_id');
+        return Redirect::to('login')->withCookie($cookie);;
     }
 }
