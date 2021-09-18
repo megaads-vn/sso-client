@@ -45,7 +45,7 @@ class SsoLoginController extends BaseController {
 
     public function showLoginForm(Request $request) {
         $previousUrl = URL::previous();
-        Session::put('redirection', $previousUrl);
+	    // Session::forget('redirection');
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
@@ -58,14 +58,16 @@ class SsoLoginController extends BaseController {
 
     public function ssoLogout (){
         Auth::logout();
+	    Session::forget('token');
+        Session::forget('user');
+        Session::forget('lastUserLogin');
+        Cache::forget('lastUserLogin');
+        Session::flush();
         if ( $this->config['active']) {
             $token = Session::get('token');
             if (Cache::has('token_validation_' . $token)) {
                 Cache::forget('token_validation_' . $token);
             }
-            Session::forget('token');
-            Session::forget('user');
-            Session::forget('lastUserLogin');
             $cookie = \Cookie::forget('user_id');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect )->withCookie($cookie);
@@ -128,21 +130,24 @@ class SsoLoginController extends BaseController {
         }
         if ( $loggedIn ) {
             // Event::fire('sso.auth.login');
-            Session::put('lastUserLogin', Auth::user());
+            Cache::forever('lastUserLogin', Auth::user());
             \Cookie::queue('user_id', $user->id, 999999999);
+            if (Session::has('redirection_' . $user->email)) {
+                $this->redirectTo = Session::pull('redirection_' . $user->email);
+            }
+            
             return Redirect::to($this->redirectTo);
         } else {
             return Response::make('Unauthorize', 401);
         }
     }
 
-    protected function getRedirectTo() {
+    protected function getRedirectTo($userEmail = '') {
         $this->redirectTo = $this->config['redirect_to'];
-        $locale = $this->getLocale();
+        $locale = '';// $this->getLocale();
         if ($locale !== '') {
             $this->redirectTo = '/' . $locale . $this->redirectTo;
         }
-        
         if ( Session::has('redirection') ) {
             $this->redirectTo = Session::get('redirection');
             Session::forget('redirection');
@@ -152,7 +157,6 @@ class SsoLoginController extends BaseController {
             $this->redirectTo = Session::get('redirect_url');
             Session::forget('redirect_url');
         }
-
     }
 
     protected function createUser($ssoUser) {

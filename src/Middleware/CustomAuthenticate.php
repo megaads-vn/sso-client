@@ -22,10 +22,18 @@ class CustomAuthenticate
     public function handle($request, Closure $next)
     {
         $ssoService = new SsoService();
+        $tableConfig = \Config::get('sso.tables');
+        $userTable = 'users';
+        if (isset($tableConfig['users'])) {
+            $userTable = $tableConfig['users'];
+        }
         if (Session::has("user")) {
             if (\Config::get('sso.active')) {
-                $ssoValidationUser = SsoController::ssoTokenValidation(false);
+                $ssoValidationUser = SsoController::ssoTokenValidation();
                 if ($ssoValidationUser) {
+                    $sessionUser = Session::get('user');
+                    $user = \DB::table($userTable)->where('email', $sessionUser->email)->first();
+                    Auth::loginUsingId($user->id, true);
                     return $next($request);
                 }
                 Auth::logout();
@@ -37,6 +45,6 @@ class CustomAuthenticate
         Session::forget('user');
         Session::forget('lastUserLogin');
         $cookie = Cookie::forget('user_id');
-        return Redirect::to('login')->withCookie($cookie);;
+        return Redirect::route('login')->withCookie($cookie);;
     }
 }
