@@ -27,24 +27,26 @@ class CustomAuthenticate
         if (isset($tableConfig['users'])) {
             $userTable = $tableConfig['users'];
         }
-        if (Session::has("user")) {
+        $token = \Cookie::get('sso_token');
+        if ($token) {
             if (\Config::get('sso.active')) {
-                $ssoValidationUser = SsoController::ssoTokenValidation();
-                if ($ssoValidationUser) {
-                    $sessionUser = Session::get('user');
-                    $user = \DB::table($userTable)->where('email', $sessionUser->email)->first();
-                    Auth::loginUsingId($user->id, true);
-                    return $next($request);
+                $ssoValidationUser = SsoController::getUser($token);
+                if ($ssoValidationUser ) {
+                    $user = \DB::table($userTable)->where('email', $ssoValidationUser->email)->first();
+                    if ($user) {
+                        Auth::loginUsingId($user->id, true);
+                        return $next($request);
+                    }
                 }
                 Auth::logout();
             } else {
                 return $next($request);
             }
         }
-        Session::forget('token');
-        Session::forget('user');
-        Session::forget('lastUserLogin');
-        $cookie = Cookie::forget('user_id');
-        return Redirect::route('login')->withCookie($cookie);;
+        \Cache::forget('user');
+        \Cache::forget('sso_token');
+        \Cookie::queue(\Cookie::forget('user_id'));
+        \Cookie::queue(\Cookie::forget('sso_token'));
+        return Redirect::route('login');
     }
 }

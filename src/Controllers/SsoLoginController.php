@@ -58,19 +58,20 @@ class SsoLoginController extends BaseController {
 
     public function ssoLogout (){
         Auth::logout();
-	    Session::forget('token');
+	    // Session::forget('token');
         Session::forget('user');
         Session::forget('lastUserLogin');
         Cache::forget('lastUserLogin');
-        Session::flush();
+        // Session::flush();
         if ( $this->config['active']) {
             $token = Session::get('token');
             if (Cache::has('token_validation_' . $token)) {
                 Cache::forget('token_validation_' . $token);
             }
-            $cookie = \Cookie::forget('user_id');
+            \Cookie::queue(\Cookie::forget('user_id'));
+            \Cookie::queue(\Cookie::forget('sso_token'));
             $logoutRedirect = $this->ssoService->getLogoutUrl();
-            return Redirect::to( $logoutRedirect )->withCookie($cookie);
+            return Redirect::to( $logoutRedirect );
         }
     }
 
@@ -88,6 +89,8 @@ class SsoLoginController extends BaseController {
                                 ->where('email', $userInfo->email)
                                 ->where('status', $activeStatus)
                                 ->first();
+                $cacheKey = 'sso::token::' . $userInfo->email;
+                \Cache::forever($cacheKey, $token);
                 $this->getRedirectTo();
                 if ( empty($existsUser) ) {
                     if ( $this->config['auto_create_user'] ) {
@@ -129,13 +132,15 @@ class SsoLoginController extends BaseController {
             $this->aclServices->$aclFunction;
         }
         if ( $loggedIn ) {
+            $request = Input::all();
             // Event::fire('sso.auth.login');
             Cache::forever('lastUserLogin', Auth::user());
             \Cookie::queue('user_id', $user->id, 999999999);
+            \Cookie::queue('sso_token', $request['token'] , 999999999);
+            
             if (Session::has('redirection_' . $user->email)) {
                 $this->redirectTo = Session::pull('redirection_' . $user->email);
             }
-            
             return Redirect::to($this->redirectTo);
         } else {
             return Response::make('Unauthorize', 401);
