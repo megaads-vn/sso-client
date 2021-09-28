@@ -58,11 +58,11 @@ class SsoLoginController extends BaseController {
 
     public function ssoLogout (){
         Auth::logout();
-	    // Session::forget('token');
+	Session::forget('token');
         Session::forget('user');
         Session::forget('lastUserLogin');
         Cache::forget('lastUserLogin');
-        // Session::flush();
+        Session::flush();
         if ( $this->config['active']) {
             $token = Session::get('token');
             if (Cache::has('token_validation_' . $token)) {
