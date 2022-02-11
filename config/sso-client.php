@@ -131,5 +131,6 @@ return [
     ],
     'messages' => [
         'invalid_user' => ''
-    ]
+    ],
+    'cache_type' => 'cache'
 ];
