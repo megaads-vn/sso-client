@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Megaads\SsoClient\Controllers;
 
 use Exception;
@@ -45,7 +45,7 @@ class SsoLoginController extends BaseController {
 
     public function showLoginForm(Request $request) {
         $previousUrl = URL::previous();
-	    // Session::forget('redirection');
+        Session::put('redirection', $previousUrl);
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
@@ -58,18 +58,13 @@ class SsoLoginController extends BaseController {
 
     public function ssoLogout (){
         Auth::logout();
-	Session::forget('token');
+        Session::forget('token');
         Session::forget('user');
-        Session::forget('lastUserLogin');
-        Cache::forget('lastUserLogin');
         Session::flush();
         if ( $this->config['active']) {
             $token = Session::get('token');
-            if (Cache::has('token_validation_' . $token)) {
-                Cache::forget('token_validation_' . $token);
-            }
-            \Cookie::queue(\Cookie::forget('user_id'));
-            \Cookie::queue(\Cookie::forget('sso_token'));
+            ssoForgetCache('user_id');
+            ssoForgetCache('sso_token');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect );
         }
@@ -86,11 +81,9 @@ class SsoLoginController extends BaseController {
             $userInfo = SsoController::getUser($token);
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)
-                                ->where('email', $userInfo->email)
-                                ->where('status', $activeStatus)
-                                ->first();
-                $cacheKey = 'sso::token::' . $userInfo->email;
-                \Cache::forever($cacheKey, $token);
+                    ->where('email', $userInfo->email)
+                    ->where('status', $activeStatus)
+                    ->first();
                 $this->getRedirectTo();
                 if ( empty($existsUser) ) {
                     if ( $this->config['auto_create_user'] ) {
@@ -134,10 +127,8 @@ class SsoLoginController extends BaseController {
         if ( $loggedIn ) {
             $request = Input::all();
             // Event::fire('sso.auth.login');
-            Cache::forever('lastUserLogin', Auth::user());
-            \Cookie::queue('user_id', $user->id, 999999999);
-            \Cookie::queue('sso_token', $request['token'] , 999999999);
-            
+            ssoSetCache('user_id', $user->id, 999999999);
+            ssoSetCache('sso_token', $request['token'] , 999999999);
             if (Session::has('redirection_' . $user->email)) {
                 $this->redirectTo = Session::pull('redirection_' . $user->email);
             }
@@ -157,7 +148,7 @@ class SsoLoginController extends BaseController {
             $this->redirectTo = Session::get('redirection');
             Session::forget('redirection');
         }
-        
+
         if ( Session::has('redirect_url') ) {
             $this->redirectTo = Session::get('redirect_url');
             Session::forget('redirect_url');
@@ -178,7 +169,7 @@ class SsoLoginController extends BaseController {
                     'code' => $ssoUser->code
                 )
             );
-            
+
         } catch (\Exception $ex) {
             \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
             throw new Exception("Error when create user " . $ex->getMessage());
@@ -211,7 +202,7 @@ class SsoLoginController extends BaseController {
                     $locale = $locale[1];
                 } else {
                     $locale = '';
-                }   
+                }
             } else {
                 $locale = '';
             }
@@ -247,7 +238,7 @@ class SsoLoginController extends BaseController {
     private function saveUserToken($userId, $token) {
         $userTable = $this->configTables['users'];
         $user = DB::table($userTable)->where('id', $userId)
-                                ->first();
+            ->first();
         if (isset($user->token)) {
             DB::table($userTable)->where('id', $userId)->update([
                 'token' => $token

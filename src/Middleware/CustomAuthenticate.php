@@ -21,13 +21,12 @@ class CustomAuthenticate
      */
     public function handle($request, Closure $next)
     {
-        $ssoService = new SsoService();
         $tableConfig = \Config::get('sso.tables');
         $userTable = 'users';
         if (isset($tableConfig['users'])) {
             $userTable = $tableConfig['users'];
         }
-        $token = \Cookie::get('sso_token');
+        $token = ssoGetCache('sso_token');
         if ($token) {
             if (\Config::get('sso.active')) {
                 $ssoValidationUser = SsoController::getUser($token);
@@ -43,10 +42,8 @@ class CustomAuthenticate
                 return $next($request);
             }
         }
-        \Cache::forget('user');
-        \Cache::forget('sso_token');
-        \Cookie::queue(\Cookie::forget('user_id'));
-        \Cookie::queue(\Cookie::forget('sso_token'));
+        ssoForgetCache('user_id');
+        ssoForgetCache('sso_token');
         return Redirect::route('login');
     }
 }
