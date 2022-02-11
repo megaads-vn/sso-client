@@ -8,7 +8,7 @@
             "email": "info@megaads.vn"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "beta",
     "require": {
         "php": ">=5.4.0",
         "megaads/sso": "2.1.*"
