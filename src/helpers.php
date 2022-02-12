@@ -3,7 +3,7 @@
 if (!function_exists('ssoGetCache')) {
     function ssoGetCache($key, $default = '') {
         $retVal = $default;
-        $cacheType = \Config::get('sso.cache_type', 'cookie');
+        $cacheType = \Config::get('sso.cache_type', 'cache');
         switch ($cacheType) {
             case 'cache':
                 $retVal = \Cache::get($key);
@@ -18,7 +18,7 @@ if (!function_exists('ssoGetCache')) {
 
 if (!function_exists('ssoSetCache')) {
     function ssoSetCache($key, $value, $time = 60) {
-        $cacheType = \Config::get('sso.cache_type', 'cookie');
+        $cacheType = \Config::get('sso.cache_type', 'cache');
         switch ($cacheType) {
             case 'cache':
                 \Cache::put($key, $value, $time);
@@ -32,7 +32,7 @@ if (!function_exists('ssoSetCache')) {
 
 if (!function_exists('ssoForgetCache')) {
     function ssoForgetCache($key) {
-        $cacheType = Config::get('sso.cache_type', 'cookie');
+        $cacheType = Config::get('sso.cache_type', 'cache');
         switch ($cacheType) {
             case 'cache':
                 \Cache::forget($key);
