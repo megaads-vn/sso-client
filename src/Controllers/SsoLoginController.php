@@ -96,6 +96,7 @@ class SsoLoginController extends BaseController {
                         return Response::make($invalidUserMsg, 403);
                     }
                 } else {
+                    $this->updateUserKey($existsUser->id, $userInfo);
                     $this->saveUserToken($existsUser->id, $token);
                     return $this->handleUserSignin($existsUser);
                 }
@@ -166,7 +167,9 @@ class SsoLoginController extends BaseController {
                     'name' => $ssoUser->name,
                     'password' => '',
                     'status' => $ssoUser->status,
-                    'code' => $ssoUser->code
+                    'code' => $ssoUser->code,
+                    'public_key' => $ssoUser->public_key,
+                    'private_key' => $ssoUser->private_key,
                 )
             );
 
@@ -175,6 +178,24 @@ class SsoLoginController extends BaseController {
             throw new Exception("Error when create user " . $ex->getMessage());
         }
         return $insertId;
+    }
+
+    protected function updateUserKey($userId, $ssoUser) {
+        try {
+            $tableUser = $this->configTables['users'];
+            $this->buildInsertData($ssoUser);
+            $updateId = DB::table($tableUser)->select('id')->where('id', $userId)->update(
+                array(
+                    'public_key' => $ssoUser->public_key,
+                    'private_key' => $ssoUser->private_key,
+                )
+            );
+
+        } catch (\Exception $ex) {
+            \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
+            throw new Exception("Error when create user " . $ex->getMessage());
+        }
+        return $updateId;
     }
 
     private function buildInsertData(&$ssoUser) {

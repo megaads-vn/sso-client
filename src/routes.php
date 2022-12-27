@@ -26,7 +26,7 @@ if ($isActive) {
     Route::any($logoutRoute, [
         'as' => $logoutRouteName,
         'uses' => '\Megaads\SsoClient\Controllers\SsoLoginController@ssoLogout'
-    ])->middleware(['sso']);
+    ]);
     
     Route::get('/sso/callback', [
         'as' => 'sso::call::back::login',

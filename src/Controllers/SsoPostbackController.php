@@ -39,6 +39,7 @@ class SsoPostbackController extends BaseController
             $email = Input::get('email');
             $active = Input::get("active");
             $username = Input::get("username");
+            $privateKey = Input::get('private_key');
             $user = DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")->first();
 
             if (!$user) {
@@ -69,7 +70,8 @@ class SsoPostbackController extends BaseController
                 }
             } else {
                 $status = $active ? $this->config['active_status'] : $this->config['inactive_status'];
-                DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")->update(['status' => $status]);
+                DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")
+                    ->update(['status' => $status, 'private_key' => $privateKey]);
                 $retval['status'] = 'successful';
                 $retval['msg'] = "Update user's status to $status";
             }
