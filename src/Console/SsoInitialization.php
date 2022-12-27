@@ -45,16 +45,26 @@ class SsoInitialization extends Command
      */
     public function handle()
     {
-        $basePath = __DIR__ . '/../Migrations/';
-        
-        // Artisan::call("vendor:publish", [
-        //     '--provider' => "Megaads\SsoClient\SsoClientServiceProvider"
-        // ]);
-        // $publishConfig = Artisan::output();
-        // $this->colorLog(trim($publishConfig), 's');
+
+        $ssoConfig = config_path('/sso.php');
+        if (!file_exists($ssoConfig)) {
+            Artisan::call("vendor:publish", [
+                '--provider' => "Megaads\SsoClient\SsoClientServiceProvider"
+            ]);
+            $publishConfig = Artisan::output();
+            $this->colorLog(trim($publishConfig), 's');
+        }
 
         if (Schema::hasTable('users')) {
-                
+            $callAlter = shell_exec('php artisan migrate --path="vendor/megaads/sso-client/src/Migrations/"');
+            $this->colorLog(trim($callAlter), 's');
+        } else {
+            $this->colorLog('Do not have users table. Then run command make:auth', 'w');
+            Artisan::call("migrate");
+            $migrateOutput = Artisan::output();
+            
+            $callAlter = shell_exec('php artisan migrate --path="vendor/megaads/sso-client/src/Migrations/"');
+            $this->colorLog(trim($callAlter), 's');
         }
     }
     

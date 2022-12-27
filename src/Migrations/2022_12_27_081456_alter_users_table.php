@@ -13,7 +13,14 @@ class AlterUsersTable extends Migration
      */
     public function up()
     {
-        //
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('code', 50)->default(null);
+                $table->text('public_key')->default(null);
+                $table->text('private_key')->default(null);
+                $table->enum('status', ['active','pending'])->default('active');
+            });
+        }
     }
 
     /**
@@ -23,6 +30,8 @@ class AlterUsersTable extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['status', 'code', 'public_key', 'private_key']);
+        });
     }
 }
