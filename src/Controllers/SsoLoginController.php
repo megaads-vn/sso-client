@@ -96,7 +96,9 @@ class SsoLoginController extends BaseController {
                         return Response::make($invalidUserMsg, 403);
                     }
                 } else {
-                    $this->updateUserKey($existsUser->id, $userInfo);
+                    if (isset($userInfo->public_key) && isset($userInfo->private_key)) {
+                        $this->updateUserKey($existsUser->id, $userInfo);
+                    }
                     $this->saveUserToken($existsUser->id, $token);
                     return $this->handleUserSignin($existsUser);
                 }
