@@ -2,13 +2,14 @@
 
 namespace Megaads\SsoClient\Middleware;
 
-use Illuminate\Support\Facades\Auth;
 use Closure;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Megaads\Sso\Controllers\SsoController;
 use Megaads\SsoClient\Services\SsoService;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Cookie;
 
 class CustomAuthenticate
 {
@@ -29,6 +30,8 @@ class CustomAuthenticate
         $token = ssoGetCache('sso_token');
         if ($token) {
             if (\Config::get('sso.active')) {
+                $previousUrl = URL::previous();
+                Session::put('redirect_url', $previousUrl);
                 $ssoValidationUser = SsoController::getUser($token);
                 if ($ssoValidationUser ) {
                     $user = \DB::table($userTable)->where('email', $ssoValidationUser->email)->first();
