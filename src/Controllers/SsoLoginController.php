@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\URL;
@@ -96,7 +97,9 @@ class SsoLoginController extends BaseController {
                         return Response::make($invalidUserMsg, 403);
                     }
                 } else {
-                    if (isset($userInfo->public_key) && isset($userInfo->private_key)) {
+                    if (isset($userInfo->public_key) && isset($userInfo->private_key)
+                    && Schema::hasColumn($userTable, 'public_key')
+                    && Schema::hasColumn($userTable, 'private_key')) {
                         $this->updateUserKey($existsUser->id, $userInfo);
                     }
                     $this->saveUserToken($existsUser->id, $token);
@@ -158,6 +161,11 @@ class SsoLoginController extends BaseController {
         }
     }
 
+    /**
+     * @param $ssoUser
+     * @return mixed
+     * @throws Exception
+     */
     protected function createUser($ssoUser) {
         $insertId = -1;
         try {
