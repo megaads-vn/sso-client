@@ -60,6 +60,9 @@ class SsoInitialization extends Command
             $this->colorLog(trim($callAlter), 's');
         } else {
             $this->colorLog('Do not have users table. Then run command make:auth', 'w');
+            $artisanPath = base_path('artisan');
+            exec('php ' . $artisanPath  .  ' make:auth --force');
+
             Artisan::call("migrate");
             $migrateOutput = Artisan::output();
             

@@ -2,27 +2,23 @@
 namespace Megaads\SsoClient\Controllers;
 
 use Exception;
-use Illuminate\Foundation\Auth\RedirectsUsers;
-use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;;
 use Illuminate\Support\Facades\URL;
 use Megaads\Sso\Controllers\SsoController;
 
 class SsoLoginController extends BaseController {
-    use ThrottlesLogins, RedirectsUsers;
+//    use ThrottlesLogins, RedirectsUsers;
+    use Authenticatable;
 
     private $ssoService;
     private $configTables;
@@ -71,11 +67,11 @@ class SsoLoginController extends BaseController {
         }
     }
 
-    public function ssoCallback() {
-        $request = Input::all();
+    public function ssoCallback(Request $request) {
+        $params = $request->all();
         $userTable = $this->configTables['users'];
-        if ( array_key_exists('token', $request) ) {
-            $token = $request['token'];
+        if ( array_key_exists('token', $params) ) {
+            $token = $params['token'];
             $activeStatus = isset($this->config['post_back']) && isset($this->config['post_back']['active_status']) ? $this->config['post_back']['active_status'] : 'active';
             $invalidUserMsg = isset($this->config['messages']) && isset($this->config['messages']['invalid_user']) ? $this->config['messages']['invalid_user'] : 'Invalid user';
             $this->ssoService->setToken($token);
@@ -92,7 +88,7 @@ class SsoLoginController extends BaseController {
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
                         $this->saveUserToken($userId, $token);
-                        return $this->handleUserSignin($userInfo);
+                        return $this->handleUserSignin($userInfo, $request);
                     } else {
                         return Response::make($invalidUserMsg, 403);
                     }
@@ -103,7 +99,7 @@ class SsoLoginController extends BaseController {
                         $this->updateUserKey($existsUser->id, $userInfo);
                     }
                     $this->saveUserToken($existsUser->id, $token);
-                    return $this->handleUserSignin($existsUser);
+                    return $this->handleUserSignin($existsUser, $request);
                 }
             } else {
                 return Response::make('Unauthorized', 403);
@@ -113,8 +109,9 @@ class SsoLoginController extends BaseController {
         }
     }
 
-    protected function handleUserSignin($user) {
+    protected function handleUserSignin($user, Request $request) {
         $acl = (object) $this->config['aclService'];
+        $guards = $this->config['guards'];
         $loggedIn = false;
         $authType = $this->config['auth_type'];
         if ( $authType == 'Auth' ) {
@@ -131,7 +128,7 @@ class SsoLoginController extends BaseController {
             $this->aclServices->$aclFunction;
         }
         if ( $loggedIn ) {
-            $request = Input::all();
+            $request = $request->all();
             // Event::fire('sso.auth.login');
             ssoSetCache('user_id', $user->id, 999999999);
             ssoSetCache('sso_token', $request['token'] , 999999999);
@@ -171,17 +168,8 @@ class SsoLoginController extends BaseController {
         try {
             $tableUser = $this->configTables['users'];
             $this->buildInsertData($ssoUser);
-            $insertId = DB::table($tableUser)->insertGetId(
-                array(
-                    'email' => $ssoUser->email,
-                    'name' => $ssoUser->name,
-                    'password' => '',
-                    'status' => $ssoUser->status,
-                    'code' => $ssoUser->code,
-                    'public_key' => $ssoUser->public_key,
-                    'private_key' => $ssoUser->private_key,
-                )
-            );
+            $insertData = (array) $ssoUser;
+            $insertId = DB::table($tableUser)->insertGetId($insertData);
 
         } catch (\Exception $ex) {
             \Log::error('Sso_Insert_User_Error: ' . $ex->getMessage());
@@ -210,10 +198,24 @@ class SsoLoginController extends BaseController {
 
     private function buildInsertData(&$ssoUser) {
         $postbackConfig = $this->config['post_back'];
+        $defaultFields = $postbackConfig['default_fields'];
         foreach ( $ssoUser as $field => $val ) {
             if ( array_key_exists($field, $postbackConfig['map'])) {
                 $getColum = $postbackConfig['map'][$field];
                 $ssoUser->$getColum = $ssoUser->$field;
+                unset($ssoUser->$field);
+            }
+        }
+        if (isset($ssoUser->id)) {
+            unset($ssoUser->id);
+        }
+        if (count($defaultFields) > 0) {
+            foreach ($defaultFields as $col => $val) {
+                if (!isset($ssoUser->$col) && $col == 'password' && $val == 'auto_create') {
+                    $ssoUser->$col = Hash::make(date('YmdHi'));
+                } elseif (!isset($ssoUser->$col)) {
+                    $ssoUser->$col = $val;
+                }
             }
         }
     }

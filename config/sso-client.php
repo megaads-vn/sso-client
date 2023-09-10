@@ -123,7 +123,8 @@ return [
             'active' => 'status',
         ],
         'default_fields' => [
-            'columns' => 'value'
+            'token' => isset($_GET['token']) ? $_GET['token'] : '',
+            'password' => 'auto_create'
         ],
         'ignore_fields' => [
             'columns'
@@ -132,5 +133,6 @@ return [
     'messages' => [
         'invalid_user' => ''
     ],
-    'cache_type' => 'cache'
+    'cache_type' => 'cache',
+    'guards' => ''
 ];

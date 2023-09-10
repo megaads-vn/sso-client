@@ -11,7 +11,7 @@ class SsoClientServiceProvider extends ServiceProvider
 
     public function boot() 
     {
-        $framework = $this->checkFrameWork();
+        // $framework = $this->checkFrameWork();
         // if ($framework && $framework['key'] == 'laravel/framework' && $framework['version'] > 52 ) {
         //     include __DIR__ . '/routes.php';
         // } else {  
@@ -48,7 +48,7 @@ class SsoClientServiceProvider extends ServiceProvider
 
     private function checkFrameWork() {
         $findFrameWork = ['laravel/framework','laravel/lumen-framework'];
-        $frameworkDeclare = file_get_contents(__DIR__ . '../../../../../composer.json');
+        $frameworkDeclare = file_get_contents(__DIR__ . '/../../../../../composer.json');
         $frameworkDeclare = json_decode($frameworkDeclare, true);
         $required =  array_key_exists('require', $frameworkDeclare) ? $frameworkDeclare['require'] : [];
         $requiredKeys = [];

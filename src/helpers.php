@@ -52,3 +52,13 @@ if (!function_exists('ssoForgetCache')) {
         }
     }
 }
+
+if (!function_exists('columnListing')) {
+    function columnListing($table) {
+        $retVal = NULL;
+        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            $retVal = \Illuminate\Support\Facades\Schema::getColumnListing($table);
+        }
+        return $retVal;
+    }
+}

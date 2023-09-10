@@ -38,3 +38,13 @@ if ($isActive) {
         'uses' => '\Megaads\SsoClient\Controllers\SsoPostbackController@ssoPostback'
     ]);
 }
+
+
+$customer = Config::get('sso.customer.active');
+if ($customer) {
+    $customerPrefix = 'customer';
+    Route::group(['prefix' => $customerPrefix, 'namespace' => 'Megaads\SsoClient\Controllers'], function() {
+        Route::get('sign-in', 'SsoCustomerController@showCustomerLoginForm')->name('customer::show::login::form');
+        Route::get('/sso/callback', 'SsoCustomerController@handleCallback')->name('customer::sso::callback');
+    });
+}
