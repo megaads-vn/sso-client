@@ -111,7 +111,6 @@ class SsoLoginController extends BaseController {
 
     protected function handleUserSignin($user, Request $request) {
         $acl = (object) $this->config['aclService'];
-        $guards = $this->config['guards'];
         $loggedIn = false;
         $authType = $this->config['auth_type'];
         if ( $authType == 'Auth' ) {
