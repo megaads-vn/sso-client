@@ -8,12 +8,10 @@
             "email": "info@megaads.vn"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "beta",
     "require": {
-        "php": "^8.1",
-        "megaads/sso": "2.1.*",
-        "laravel/framework": "^10.10",
-        "laravel/breeze": "^1.23"
+        "php": ">=5.4.0",
+        "megaads/sso": "2.1.*"
     },
     "autoload": {
         "classmap": [
