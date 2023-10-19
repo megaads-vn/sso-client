@@ -87,8 +87,7 @@ class SsoLoginController extends BaseController {
                         $userInfo->status = $activeStatus;
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
-                        $this->saveUserToken($userId, $token);
-                        return $this->handleUserSignin($userInfo, $request);
+                        return $this->handleUserSignin($userInfo);
                     } else {
                         return Response::make($invalidUserMsg, 403);
                     }
@@ -102,9 +101,21 @@ class SsoLoginController extends BaseController {
                     return $this->handleUserSignin($existsUser, $request);
                 }
             } else {
-                return Response::make('Unauthorized', 403);
+                if (Auth::check()) {
+                    Auth::logout();
+                }
+                if (function_exists('ssoForgetCache')) {
+                    ssoForgetCache('sso_token');
+                }
+                return Response::make('Access Denied', 403);
             }
         } else {
+            if (Auth::check()) {
+                Auth::logout();
+            }
+            if (function_exists('ssoForgetCache')) {
+                ssoForgetCache('sso_token');
+            }
             return Response::make('Unauthorized', 500);
         }
     }
@@ -131,6 +142,7 @@ class SsoLoginController extends BaseController {
             // Event::fire('sso.auth.login');
             ssoSetCache('user_id', $user->id, 999999999);
             ssoSetCache('sso_token', $request['token'] , 999999999);
+            $this->saveUserToken($user->id, $request['token']);
             if (Session::has('redirection_' . $user->email)) {
                 $this->redirectTo = Session::pull('redirection_' . $user->email);
             }

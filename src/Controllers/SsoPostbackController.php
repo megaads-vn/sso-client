@@ -72,6 +72,10 @@ class SsoPostbackController extends BaseController
                 $status = $active ? $this->config['active_status'] : $this->config['inactive_status'];
                 DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")
                     ->update(['status' => $status, 'private_key' => $privateKey]);
+                if ($status !== $this->config['active_status']) {
+                    DB::table($configUserTable)->whereRaw("replace(`email`, '.', '') = replace('$email', '.', '')")
+                        ->update(['token' => ""]);
+                }
                 $retval['status'] = 'successful';
                 $retval['msg'] = "Update user's status to $status";
             }

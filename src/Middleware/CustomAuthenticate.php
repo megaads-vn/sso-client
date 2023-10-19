@@ -36,6 +36,7 @@ class CustomAuthenticate
                 if ($ssoValidationUser ) {
                     $user = \DB::table($userTable)->where('email', $ssoValidationUser->email)->first();
                     if ($user) {
+                        $this->saveUserToken($user->id, $token, $userTable);
                         Auth::loginUsingId($user->id, true);
                         return $next($request);
                     }
@@ -48,5 +49,15 @@ class CustomAuthenticate
         ssoForgetCache('user_id');
         ssoForgetCache('sso_token');
         return Redirect::route('login');
+    }
+
+    private function saveUserToken($userId, $token, $userTable) {
+        $user = \DB::table($userTable)->where('id', $userId)
+            ->first();
+        if (isset($user->token)) {
+            \DB::table($userTable)->where('id', $userId)->update([
+                'token' => $token
+            ]);
+        }
     }
 }
