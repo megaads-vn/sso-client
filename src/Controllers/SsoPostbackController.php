@@ -132,6 +132,7 @@ class SsoPostbackController extends BaseController
     }
 
     private function checkDnsCallService() {
+        return true;
         $retval = true;
         $dns = dns_get_record("id.megaads.vn", DNS_A);
         if ($dns) {

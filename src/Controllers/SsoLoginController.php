@@ -87,7 +87,7 @@ class SsoLoginController extends BaseController {
                         $userInfo->status = $activeStatus;
                         $userId = $this->createUser($userInfo);
                         $userInfo->id = $userId;
-                        return $this->handleUserSignin($userInfo);
+                        return $this->handleUserSignin($userInfo, $request);
                     } else {
                         return Response::make($invalidUserMsg, 403);
                     }
