@@ -283,10 +283,10 @@ class SsoLoginController extends BaseController {
         $userTable = $this->configTables['users'];
         $user = DB::table($userTable)->where('id', $userId)
             ->first();
-        if (isset($user->token)) {
+        // if (isset($user->token)) {
             DB::table($userTable)->where('id', $userId)->update([
                 'token' => $token
             ]);
-        }
+        // }
     }
 }
