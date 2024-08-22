@@ -36,7 +36,9 @@ class CustomAuthenticate
                 if ($ssoValidationUser ) {
                     $user = \DB::table($userTable)->where('email', $ssoValidationUser->email)->first();
                     if ($user) {
-                        $this->saveUserToken($user->id, $token, $userTable);
+                        if (config('sso.update_user_token'. false)) {
+                            $this->saveUserToken($user->id, $token, $userTable);
+                        }
                         Auth::loginUsingId($user->id, true);
                         return $next($request);
                     }

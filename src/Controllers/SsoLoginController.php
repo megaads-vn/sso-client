@@ -97,7 +97,9 @@ class SsoLoginController extends BaseController {
                     && Schema::hasColumn($userTable, 'private_key')) {
                         $this->updateUserKey($existsUser->id, $userInfo);
                     }
-                    $this->saveUserToken($existsUser->id, $token);
+                    if (config('sso.update_user_token'. false)) {
+                        $this->saveUserToken($existsUser->id, $token);
+                    }
                     return $this->handleUserSignin($existsUser, $request);
                 }
             } else {
@@ -142,7 +144,10 @@ class SsoLoginController extends BaseController {
             // Event::fire('sso.auth.login');
             ssoSetCache('user_id', $user->id, 999999999);
             ssoSetCache('sso_token', $request['token'] , 999999999);
-            $this->saveUserToken($user->id, $request['token']);
+            if (config('sso.update_user_token'. false)) {
+                $this->saveUserToken($user->id, $request['token']);
+            }
+
             if (Session::has('redirection_' . $user->email)) {
                 $this->redirectTo = Session::pull('redirection_' . $user->email);
             }
