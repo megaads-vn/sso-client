@@ -113,6 +113,7 @@ class SsoPostbackController extends BaseController
         if (in_array('slug', $tableColumns)) {
             $name = isset($buildData['name']) && $buildData['name'] != "" ? $buildData['name'] : $username . ' rand' . mt_rand(100,999);
             $buildData['slug'] = $this->sluggify($name);
+            $buildData['slug'] .= '-' . $buildData['username'] . '-' . time();
         }
         if (count($defaultColumns) > 0) {
             foreach ($defaultColumns as $col => $val) {
