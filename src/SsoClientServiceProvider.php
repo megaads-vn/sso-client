@@ -4,6 +4,7 @@ namespace Megaads\SsoClient;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use Megaads\SsoClient\Console\SsoInitialization;
+use Megaads\SsoClient\Console\SsoMigrate;
 use Megaads\SsoClient\Services\SsoService;
 
 class SsoClientServiceProvider extends ServiceProvider 
@@ -32,7 +33,11 @@ class SsoClientServiceProvider extends ServiceProvider
         App::singleton('command.sso.init', function($app) {
             return new SsoInitialization();
         });
+        App::singleton('command.sso.migrate', function($app) {
+            return new SsoMigrate();
+        });
         $this->commands('command.sso.init');
+        $this->commands('command.sso.migrate');
     }
 
     private function publishConfig()

@@ -42,13 +42,15 @@ class SsoLoginController extends BaseController {
 
     public function showLoginForm(Request $request) {
         $previousUrl = URL::previous();
-        Session::put('redirection', $previousUrl);
+        if (!preg_match('/\/(api|service|services)\//i', $previousUrl) && !preg_match('/ajax/i', $previousUrl)) {
+            Session::put('redirection', $previousUrl);
+            Session::save();
+        }
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
             $httpHost = "http://{$_SERVER['HTTP_HOST']}";
             $loginRedirect = SsoController::getRedirectUrl($httpHost);
-            $loginRedirect = $this->prepareRedirectWithLocale($loginRedirect);
             return Redirect::to($loginRedirect);
         }
     }
@@ -62,6 +64,7 @@ class SsoLoginController extends BaseController {
             $token = Session::get('token');
             ssoForgetCache('user_id');
             ssoForgetCache('sso_token');
+            ssoForgetCache('token');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect );
         }
@@ -76,11 +79,13 @@ class SsoLoginController extends BaseController {
             $invalidUserMsg = isset($this->config['messages']) && isset($this->config['messages']['invalid_user']) ? $this->config['messages']['invalid_user'] : 'Invalid user';
             $this->ssoService->setToken($token);
             $userInfo = SsoController::getUser($token);
+
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)
                     ->where('email', $userInfo->email)
                     ->where('status', $activeStatus)
                     ->first();
+
                 $this->getRedirectTo();
                 if ( empty($existsUser) ) {
                     if ( $this->config['auto_create_user'] ) {
@@ -109,7 +114,21 @@ class SsoLoginController extends BaseController {
                 if (function_exists('ssoForgetCache')) {
                     ssoForgetCache('sso_token');
                 }
-                return Response::make('Access Denied', 403);
+                $logoutRedirect = $this->ssoService->getLogoutUrl();
+                return response()->make('
+    <html>
+        <head>
+            <!-- <meta http-equiv="refresh" content="5;url='. $logoutRedirect . '"> -->
+            <title>Access Denied</title>
+        </head>
+        <body>
+            <h2>Access Denied</h2>
+            <p>You do not have permission to access this resource or your token has expired.</p>
+            <p>Please <a href="' . $logoutRedirect . '">log in again</a>, or you will be automatically redirected in 5 seconds.</p>
+            <button onclick="window.location.href=\'' . $logoutRedirect . '\'">Logout</button>
+        </body>
+    </html>
+', 403);
             }
         } else {
             if (Auth::check()) {
@@ -165,10 +184,9 @@ class SsoLoginController extends BaseController {
         }
         if ( Session::has('redirection') ) {
             $this->redirectTo = Session::get('redirection');
+            \Log::info('GET_SESSION_REDIRECT_TO: ' . $this->redirectTo);
             Session::forget('redirection');
-        }
-
-        if ( Session::has('redirect_url') ) {
+        }else if ( Session::has('redirect_url') ) {
             $this->redirectTo = Session::get('redirect_url');
             Session::forget('redirect_url');
         }
