@@ -115,17 +115,16 @@ class SsoLoginController extends BaseController {
                     ssoForgetCache('sso_token');
                 }
                 $logoutRedirect = $this->ssoService->getLogoutUrl();
+                $logoutRedirect .= '&error=missing_session';
                 return response()->make('
     <html>
         <head>
-            <!-- <meta http-equiv="refresh" content="5;url='. $logoutRedirect . '"> -->
-            <title>Access Denied</title>
+            <meta http-equiv="refresh" content="5;url='. $logoutRedirect . '">
+            <title>Has Error When Login</title>
         </head>
         <body>
-            <h2>Access Denied</h2>
-            <p>You do not have permission to access this resource or your token has expired.</p>
+            <h2>Has Error When Login</h2>
             <p>Please <a href="' . $logoutRedirect . '">log in again</a>, or you will be automatically redirected in 5 seconds.</p>
-            <button onclick="window.location.href=\'' . $logoutRedirect . '\'">Logout</button>
         </body>
     </html>
 ', 403);
