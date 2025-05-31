@@ -51,6 +51,7 @@ class SsoLoginController extends BaseController {
         } else {
             $httpHost = "http://{$_SERVER['HTTP_HOST']}";
             $loginRedirect = SsoController::getRedirectUrl($httpHost);
+            $loginRedirect = $this->prepareRedirectWithLocale($loginRedirect);
             return Redirect::to($loginRedirect);
         }
     }
@@ -177,6 +178,11 @@ class SsoLoginController extends BaseController {
 
     protected function getRedirectTo($userEmail = '') {
         $this->redirectTo = $this->config['redirect_to'];
+        $this->redirectTo = str_replace('//', '/', $this->redirectTo);
+        $currentHost = $_SERVER['HTTP_HOST'];
+        if (strpos($this->redirectTo, 'http') === false) {
+            $this->redirectTo = "https://{$currentHost}/{$this->redirectTo}";
+        }
         $locale = '';// $this->getLocale();
         if ($locale !== '') {
             $this->redirectTo = '/' . $locale . $this->redirectTo;
