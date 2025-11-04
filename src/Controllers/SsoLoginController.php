@@ -82,6 +82,10 @@ class SsoLoginController extends BaseController {
                     ->where('status', $activeStatus)
                     ->first();
                 $this->getRedirectTo();
+                if (!trim($token)) {
+                    $token = md5($userInfo->email . time());
+                    $request->merge(['token' => $token]);
+                }
                 if ( empty($existsUser) ) {
                     if ( $this->config['auto_create_user'] ) {
                         $userInfo->status = $activeStatus;
@@ -137,12 +141,12 @@ class SsoLoginController extends BaseController {
             $this->aclServices = App::make($acl->name);
             $this->aclServices->$aclFunction;
         }
-        if ( $loggedIn ) {
+        if ($loggedIn) {
             $request = $request->all();
             // Event::fire('sso.auth.login');
             ssoSetCache('user_id', $user->id, 999999999);
-            ssoSetCache('sso_token', $request['token'] , 999999999);
-            $this->saveUserToken($user->id, $request['token']);
+            ssoSetCache('sso_token', trim($request['token']) , 999999999);
+            $this->saveUserToken($user->id, trim($request['token']));
             if (Session::has('redirection_' . $user->email)) {
                 $this->redirectTo = Session::pull('redirection_' . $user->email);
             }
@@ -283,10 +287,13 @@ class SsoLoginController extends BaseController {
         $userTable = $this->configTables['users'];
         $user = DB::table($userTable)->where('id', $userId)
             ->first();
-        // if (isset($user->token)) {
+        if (!trim($token)) {
+            $token = md5($userId . time());
+        }
+        if ($user && trim($token)) {
             DB::table($userTable)->where('id', $userId)->update([
                 'token' => $token
             ]);
-        // }
+        }
     }
 }

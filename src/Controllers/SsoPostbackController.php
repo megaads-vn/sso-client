@@ -186,7 +186,7 @@ class SsoPostbackController extends BaseController
         $token = md5($userId . time());
         $user = DB::table($userTable)->where('id', $userId)
                                 ->first();
-        if (isset($user->token)) {
+        if ($user && trim($token)) {
             DB::table($userTable)->where('id', $userId)->update([
                 'token' => $token
             ]);

@@ -27,7 +27,7 @@ class CustomAuthenticate
         if (isset($tableConfig['users'])) {
             $userTable = $tableConfig['users'];
         }
-        $token = ssoGetCache('sso_token');
+        $token = trim(ssoGetCache('sso_token'));
         if ($token) {
             if (\Config::get('sso.active')) {
                 $previousUrl = URL::previous();
@@ -54,7 +54,10 @@ class CustomAuthenticate
     private function saveUserToken($userId, $token, $userTable) {
         $user = \DB::table($userTable)->where('id', $userId)
             ->first();
-        if (isset($user->token)) {
+        if (!trim($token)) {
+            $token = md5($userId . time());
+        }
+        if ($user && trim($token)) {
             \DB::table($userTable)->where('id', $userId)->update([
                 'token' => $token
             ]);
