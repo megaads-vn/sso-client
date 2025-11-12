@@ -42,7 +42,10 @@ class SsoLoginController extends BaseController {
 
     public function showLoginForm(Request $request) {
         $previousUrl = URL::previous();
-        Session::put('redirection', $previousUrl);
+        if (!preg_match('/\/(api|service|services)\//i', $previousUrl) && !preg_match('/ajax/i', $previousUrl)) {
+            Session::put('redirection', $previousUrl);
+            Session::save();
+        }
         if ( ! $this->config['active'] ) {
             return view('auth.login');
         } else {
@@ -62,6 +65,7 @@ class SsoLoginController extends BaseController {
             $token = Session::get('token');
             ssoForgetCache('user_id');
             ssoForgetCache('sso_token');
+            ssoForgetCache('token');
             $logoutRedirect = $this->ssoService->getLogoutUrl();
             return Redirect::to( $logoutRedirect );
         }
@@ -76,11 +80,13 @@ class SsoLoginController extends BaseController {
             $invalidUserMsg = isset($this->config['messages']) && isset($this->config['messages']['invalid_user']) ? $this->config['messages']['invalid_user'] : 'Invalid user';
             $this->ssoService->setToken($token);
             $userInfo = SsoController::getUser($token);
+
             if ( $userInfo ) {
                 $existsUser = DB::table($userTable)
                     ->where('email', $userInfo->email)
                     ->where('status', $activeStatus)
                     ->first();
+
                 $this->getRedirectTo();
                 if (!trim($token)) {
                     $token = md5($userInfo->email . time());
@@ -101,7 +107,9 @@ class SsoLoginController extends BaseController {
                     && Schema::hasColumn($userTable, 'private_key')) {
                         $this->updateUserKey($existsUser->id, $userInfo);
                     }
-                    $this->saveUserToken($existsUser->id, $token);
+                    if (config('sso.update_user_token'. false)) {
+                        $this->saveUserToken($existsUser->id, $token);
+                    }
                     return $this->handleUserSignin($existsUser, $request);
                 }
             } else {
@@ -111,7 +119,20 @@ class SsoLoginController extends BaseController {
                 if (function_exists('ssoForgetCache')) {
                     ssoForgetCache('sso_token');
                 }
-                return Response::make('Access Denied', 403);
+                $logoutRedirect = $this->ssoService->getLogoutUrl();
+                $logoutRedirect .= '&error=missing_session';
+                return response()->make('
+    <html>
+        <head>
+            <meta http-equiv="refresh" content="5;url='. $logoutRedirect . '">
+            <title>Has Error When Login</title>
+        </head>
+        <body>
+            <h2>Has Error When Login</h2>
+            <p>Please <a href="' . $logoutRedirect . '">log in again</a>, or you will be automatically redirected in 5 seconds.</p>
+        </body>
+    </html>
+', 403);
             }
         } else {
             if (Auth::check()) {
@@ -158,6 +179,11 @@ class SsoLoginController extends BaseController {
 
     protected function getRedirectTo($userEmail = '') {
         $this->redirectTo = $this->config['redirect_to'];
+        $this->redirectTo = str_replace('//', '/', $this->redirectTo);
+        $currentHost = $_SERVER['HTTP_HOST'];
+        if (strpos($this->redirectTo, 'http') === false) {
+            $this->redirectTo = "https://{$currentHost}/{$this->redirectTo}";
+        }
         $locale = '';// $this->getLocale();
         if ($locale !== '') {
             $this->redirectTo = '/' . $locale . $this->redirectTo;
@@ -165,9 +191,7 @@ class SsoLoginController extends BaseController {
         if ( Session::has('redirection') ) {
             $this->redirectTo = Session::get('redirection');
             Session::forget('redirection');
-        }
-
-        if ( Session::has('redirect_url') ) {
+        }else if ( Session::has('redirect_url') ) {
             $this->redirectTo = Session::get('redirect_url');
             Session::forget('redirect_url');
         }

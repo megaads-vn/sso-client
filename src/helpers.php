@@ -56,8 +56,11 @@ if (!function_exists('ssoForgetCache')) {
 if (!function_exists('columnListing')) {
     function columnListing($table) {
         $retVal = NULL;
-        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
-            $retVal = \Illuminate\Support\Facades\Schema::getColumnListing($table);
+        $columns = \DB::select("SHOW COLUMNS FROM {$table}");
+        if ($columns) {
+            $retVal = array_map(function($column) {
+                return $column->Field;
+            }, $columns);
         }
         return $retVal;
     }
