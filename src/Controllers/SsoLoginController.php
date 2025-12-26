@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Session;;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
 use Megaads\Sso\Controllers\SsoController;
 
@@ -107,7 +107,7 @@ class SsoLoginController extends BaseController {
                     && Schema::hasColumn($userTable, 'private_key')) {
                         $this->updateUserKey($existsUser->id, $userInfo);
                     }
-                    if (config('sso.update_user_token'. false)) {
+                    if (config('sso.update_user_token' . false)) {
                         $this->saveUserToken($existsUser->id, $token);
                     }
                     return $this->handleUserSignin($existsUser, $request);
@@ -295,7 +295,7 @@ class SsoLoginController extends BaseController {
         $parts = parse_url($loginRedirect);
         parse_str($parts['query'], $query);
         $locale = $this->getLocale();
-        if ($locale !== '') {
+        if ($locale !== '' && (isset($query['continue']) && strpos($query['continue'], "/$locale/") == false)) {
             $query['continue'] = str_replace('/sso/callback', "/$locale/sso/callback", $query['continue']);
         }
         $queryStr = '';
