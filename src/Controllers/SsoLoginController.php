@@ -307,17 +307,23 @@ class SsoLoginController extends BaseController {
         return $loginRedirect;
     }
 
+    /**
+     * Only fill users.token when it is empty. The column is a stable per-user
+     * API key shared by cron jobs and internal APIs, so a new SSO login must
+     * not rotate it.
+     */
     private function saveUserToken($userId, $token) {
         $userTable = $this->configTables['users'];
-        $user = DB::table($userTable)->where('id', $userId)
-            ->first();
         if (!trim($token)) {
             $token = md5($userId . time());
         }
-        if ($user && trim($token)) {
-            DB::table($userTable)->where('id', $userId)->update([
-                'token' => $token
+        DB::table($userTable)
+            ->where('id', $userId)
+            ->where(function ($query) {
+                $query->whereNull('token')->orWhere('token', '');
+            })
+            ->update([
+                'token' => trim($token)
             ]);
-        }
     }
 }

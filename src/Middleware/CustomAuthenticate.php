@@ -36,7 +36,9 @@ class CustomAuthenticate
                 if ($ssoValidationUser ) {
                     $user = \DB::table($userTable)->where('email', $ssoValidationUser->email)->first();
                     if ($user) {
-                        $this->saveUserToken($user->id, $token, $userTable);
+                        if (!trim((string) $user->token)) {
+                            $this->saveUserToken($user->id, $token, $userTable);
+                        }
                         Auth::loginUsingId($user->id, true);
                         return $next($request);
                     }
@@ -51,16 +53,23 @@ class CustomAuthenticate
         return Redirect::route('login');
     }
 
+    /**
+     * users.token is a stable per-user API key (cron jobs and internal APIs
+     * authenticate with it), not a mirror of the SSO cookie. Only fill it when
+     * it is empty; never overwrite an existing value, otherwise a stale tab
+     * holding an older sso_token cookie rewrites the key and breaks callers.
+     */
     private function saveUserToken($userId, $token, $userTable) {
-        $user = \DB::table($userTable)->where('id', $userId)
-            ->first();
         if (!trim($token)) {
             $token = md5($userId . time());
         }
-        if ($user && trim($token)) {
-            \DB::table($userTable)->where('id', $userId)->update([
-                'token' => $token
+        \DB::table($userTable)
+            ->where('id', $userId)
+            ->where(function ($query) {
+                $query->whereNull('token')->orWhere('token', '');
+            })
+            ->update([
+                'token' => trim($token)
             ]);
-        }
     }
 }
