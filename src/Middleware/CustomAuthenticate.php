@@ -50,6 +50,9 @@ class CustomAuthenticate
         }
         ssoForgetCache('user_id');
         ssoForgetCache('sso_token');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthenticated'], 401);
+        }
         return Redirect::route('login');
     }
 
